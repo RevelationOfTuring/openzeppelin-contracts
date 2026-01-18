@@ -5,10 +5,13 @@ pragma solidity ^0.8.20;
 
 import {ERC6909} from "../ERC6909.sol";
 import {IERC6909ContentURI} from "../../../interfaces/IERC6909.sol";
+import {IERC165} from "../../../utils/introspection/IERC165.sol";
 
 /**
  * @dev Implementation of the Content URI extension defined in ERC6909.
  */
+
+// ERC6909ContentURI是ERC6909的一个扩展模块，专门用于管理合约级别和代币级别的Metadata信息。它允许通过URI将链上代币关联到链外的JSON描述文件。
 contract ERC6909ContentURI is ERC6909, IERC6909ContentURI {
     string private _contractURI;
     mapping(uint256 id => string) private _tokenURIs;
@@ -18,6 +21,12 @@ contract ERC6909ContentURI is ERC6909, IERC6909ContentURI {
 
     /// @dev See {IERC1155-URI}
     event URI(string value, uint256 indexed id);
+
+    /// @inheritdoc IERC165
+    // 声明该合约支持IERC6909ContentURI接口
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC6909, IERC165) returns (bool) {
+        return interfaceId == type(IERC6909ContentURI).interfaceId || super.supportsInterface(interfaceId);
+    }
 
     /// @inheritdoc IERC6909ContentURI
     function contractURI() public view virtual override returns (string memory) {
