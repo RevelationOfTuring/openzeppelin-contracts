@@ -33,7 +33,17 @@ pragma solidity ^0.8.20;
  * _Available since v5.1._
  */
 // solhint-disable func-name-mixedcase
+
+// 该库是的一个底层工具库，其核心目的是在单个 bytes32（或其他 bytes 格式）中紧凑地存储和提取多个较小的数据类型 。
+// 这种技术被称为“数据打包（Data Packing）”，是Solidity开发中极致优化Gas成本的最重要手段之一。通过减少存储插槽（Storage Slots）的使用，可以显著降低SSTORE操作带来的高昂开销。
+// 在Solidity中，一个存储插槽固定为32字节（256 位）。如果不进行打包，即使是一个uint8也会占据一整个插槽 。Packing.sol 提供了一套程序生成的函数，允许你将诸如 address (20 bytes)、bytes4 选择器和 uint64 时间戳等数据合并到一个bytes32中
+
+// 由于该文件是自动生成的，它遵循非常严格的命名约定，方便开发者按需选择:
+// - pack_N_M：将两个数据块（左侧 N 字节，右侧 M 字节）合并成一个N+M字节的结果；
+// - extract_32_N(bytes32 self, uint8 offset)：从一个 bytes32 的指定偏移量offset处提取出N字节的数据；
+// - replace_32_N(bytes32 self, bytesN value, uint8 offset)：替换 bytes32 中指定位置的 N 字节数据，并返回更新后的整个bytes32
 library Packing {
+    // 尝试在一个bytes32中以超出边界的偏移量进行提取或替换时（例如在偏移量 30 处提取 10 字节），合约会抛出此错误以防止数据损坏
     error OutOfRangeAccess();
 
     function pack_1_1(bytes1 left, bytes1 right) internal pure returns (bytes2 result) {
