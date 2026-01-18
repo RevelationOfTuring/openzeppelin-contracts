@@ -13,7 +13,9 @@ import {IERC165} from "../../../utils/introspection/IERC165.sol";
 
 // ERC6909ContentURI是ERC6909的一个扩展模块，专门用于管理合约级别和代币级别的Metadata信息。它允许通过URI将链上代币关联到链外的JSON描述文件。
 contract ERC6909ContentURI is ERC6909, IERC6909ContentURI {
+    // 存储整个合约的元数据链接
     string private _contractURI;
+    // 存储每个特定id代币的独立元数据链接
     mapping(uint256 id => string) private _tokenURIs;
 
     /// @dev Event emitted when the contract URI is changed. See https://eips.ethereum.org/EIPS/eip-7572[ERC-7572] for details.
@@ -29,11 +31,13 @@ contract ERC6909ContentURI is ERC6909, IERC6909ContentURI {
     }
 
     /// @inheritdoc IERC6909ContentURI
+    // 返回合约级别的URI 。通常用于像OpenSea这样的平台来展示集合的名称、描述和图标
     function contractURI() public view virtual override returns (string memory) {
         return _contractURI;
     }
 
     /// @inheritdoc IERC6909ContentURI
+    // 返回特定代币id的详细元数据链接 。这通常指向一个包含图片、属性等信息的 JSON 文件
     function tokenURI(uint256 id) public view virtual override returns (string memory) {
         return _tokenURIs[id];
     }
@@ -43,6 +47,8 @@ contract ERC6909ContentURI is ERC6909, IERC6909ContentURI {
      *
      * Emits a {ContractURIUpdated} event.
      */
+
+    // 内部管理函数，用于更新合约的URI存储
     function _setContractURI(string memory newContractURI) internal virtual {
         _contractURI = newContractURI;
 
@@ -54,6 +60,7 @@ contract ERC6909ContentURI is ERC6909, IERC6909ContentURI {
      *
      * Emits a {URI} event.
      */
+    // 内部管理函数，用于为指定的代币id设置新的URI
     function _setTokenURI(uint256 id, string memory newTokenURI) internal virtual {
         _tokenURIs[id] = newTokenURI;
 
