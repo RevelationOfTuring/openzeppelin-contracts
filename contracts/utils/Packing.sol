@@ -42,6 +42,23 @@ pragma solidity ^0.8.20;
 // - pack_N_M：将两个数据块（左侧 N 字节，右侧 M 字节）合并成一个N+M字节的结果；
 // - extract_32_N(bytes32 self, uint8 offset)：从一个 bytes32 的指定偏移量offset处提取出N字节的数据；
 // - replace_32_N(bytes32 self, bytesN value, uint8 offset)：替换 bytes32 中指定位置的 N 字节数据，并返回更新后的整个bytes32
+
+// 编译器自动打包（定义一个结构体，如:
+//      struct UserInfo {
+//         address account; // 20 字节
+//         uint96 balance;  // 12 字节
+//      }，编译器会自动将它们挤进同一个32字节的插槽中）
+// 与 手动位运算（使用Packing.sol）的区别：
+// 目标操作：更新 uint96 balance，保持 address 不变。
+// - 编译器自动打包：
+//      SLOAD：加载整个 32 字节到栈。
+//      CLEANING：使用一个巨大的掩码（Mask）清空旧的 12 字节区域（例如使用 not(mask)）。
+//      OR / INSERT：将新值移位（Shift）到正确位置，然后进行 OR 运算。
+//      SSTORE：写回存储。
+//  注：编译器生成的代码为了保证通用性，有时会包含多余的溢出检查或无效位清零（Cleaning），在复杂的 if-else 或循环中，这些指令会堆积。
+// - 使用Packing.sol：
+//      使用xor技巧：如replace_32_12的底层逻辑 —— result := xor(self, shr(mul(8, offset), xor(oldValue, value)))
+//  注：利用了“异或”的抵消特性。它不需要复杂的“清空再插入”过程，而是直接通过两次异或计算出差异位并覆盖。在某些EVM版本中，这能比编译器的 AND/OR 组合节省几单位的 Gas。
 library Packing {
     // 尝试在一个bytes32中以超出边界的偏移量进行提取或替换时（例如在偏移量 30 处提取 10 字节），合约会抛出此错误以防止数据损坏
     error OutOfRangeAccess();
