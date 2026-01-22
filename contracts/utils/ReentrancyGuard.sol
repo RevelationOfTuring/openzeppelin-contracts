@@ -142,6 +142,7 @@ abstract contract ReentrancyGuard {
      */
     // 内部函数，判断当前被调用函数是否处于锁状态。如果是，返回true，否则返回false。
     function _reentrancyGuardEntered() internal view returns (bool) {
+        // slot中存储的锁状态是否为ENTERED
         return _reentrancyGuardStorageSlot().getUint256Slot().value == ENTERED;
     }
 
